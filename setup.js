@@ -1,69 +1,86 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
+/********************************/
+/** interfaces wrapping nessie **/
+/********************************/
+
 const BASE_URL = 'http://api.reimaginebanking.com'
 
-const post_json = relative_url => method => json => api_key =>
-	fetch(`${BASE_URL}${relative_url}?key=${api_key}`, {
+const post_json = relative_url => method => api => json =>
+	fetch(`${BASE_URL}${relative_url}?key=${api}`, {
 		method: method.toUpperCase(), // lol
 		headers: { 'content-type': 'application/json; charset=utf-8' },
 		body: JSON.stringify(json)
-	}).then(r => r.json()).finally(console.log(json))
+	}).then(r => r.json()).finally(console.log(api))
 
-const id = resp_json => resp_json.objectCreated._id
 const create_customer = post_json('/customers')('post')
 const create_account  = customer_id => post_json(`/customers/${customer_id}/accounts`)('post')
-const create_deposit  = account_id  => post_json(`/accounts/${account_id}/deposits`)('post')
-const get_deposits    = account_id  => post_json(`/accounts/${account_id}/deposits`)('get')
+const create_deposit  = ({ api, acc }) => post_json(`/accounts/${acc}/deposits`)('post')(api)
+const get_deposits    = ({ api, acc }) => post_json(`/accounts/${acc}/deposits`)('get')(api)
 
-const group = size => ar => new Array(Math.ceil(ar.length / size)).fill(0).map((_, i) => ar.slice(i * size, (i + 1) * size))
+/***************************************************************************************/
+/** functions dealing with transforming data so it can be stored in nessie as strings **/
+/***************************************************************************************/
 
-// 'ascii' is windows-1252, which seems to not be a subset of utf-8
-// e.g. wikipedia says that 0159 is Ÿ in windows-1252, but utf-8 0159 is some control character ?
+// group array ar into size-sized arrays
+const group = size => ar =>
+	new Array(Math.ceil(ar.length / size)).fill(0).map((_, i) => ar.slice(i * size, (i + 1) * size))
+
+// * note: I thought that ascii was subset of unicode but not really sure...
+// *       e.g. wikipedia says that 0159 is Ÿ in windows-1252, but utf-8 0159 is some control character ?
+// *       had some trouble with using TextEncoder/TextDecoder to do what I wanted so I just used fromCharCode/charCodeAt.
+
+// transform bytes into 'ascii' string; basically base-256 encode (see note above)
 const bytes_to_ascii = bytes => String.fromCharCode(...bytes)
-const ascii_to_bytes = str   => new Uint8Array(str.length).map((_, i) => str.charCodeAt(i))
 
-const store_chunk = account_id => index => bytes =>
-	create_deposit(account_id)({ amount: index, medium: 'balance', description: bytes_to_ascii(bytes) })
+// transform 'ascii' string into bytes; basically base-256 decode (see note above)
+const ascii_to_bytes = str => new Uint8Array(str.length).map((_, i) => str.charCodeAt(i))
 
-const store_file =
-	api_key => account_id => async bytes =>
-		Promise.all(group(1024)(bytes).map((group, i) => store_chunk(account_id)(i + 1)(group)(api_key)))
+// store bytes in account as a deposite with amount=index
+const upload_bytes = uid => index => bytes =>
+	create_deposit(uid)({ amount: index, medium: 'balance', description: bytes_to_ascii(bytes) })
 
-const get_file =
-	api_key => async account_id => {
-		const deposits = await get_deposits(account_id)()(api_key)
+// chunk bytes into groups and store groups in order starting from index=0
+const upload_bytes_chunked =
+	uid => async (bytes, chunk_size=1024) =>
+		Promise.all(group(chunk_size)(bytes).map((group, i) => upload_bytes(uid)(i + 1)(group)))
+
+// download an account's deposits as chunks (sorted by amount) and return them all smushed together
+const download_chunked_bytes =
+	async uid => {
+		const deposits = await get_deposits(uid)()
 		deposits.sort((a, b) => a.amount - b.amount)
 		return new Uint8Array(deposits.map(({ description }) => Array.from(ascii_to_bytes(description))).flat())
 	}
 
+// generate_id: given api key, generates new/empty account and returns its {uid}
 const _ = 'AA'
+const id = resp_json => resp_json.objectCreated._id
 const dummy_customer = { first_name: _, last_name: _, address: { street_number: _, street_name: _, city: _, state: _, zip: '00000' }}
 const dummy_account  = { type: 'Credit Card', balance: 0, rewards: 0, nickname: _ }
-const generate_account_id =
-	async api_key => {
-		const customer_id = await create_customer(dummy_customer)(api_key).then(id)
-		const account_id  = await create_account(customer_id)(dummy_account)(api_key).then(id)
+const generate_uid =
+	async api =>
+{
+	const customer_id = await create_customer(api)(dummy_customer).then(id)
+	const acc = await create_account(customer_id)(api)(dummy_account).then(id)
 
-		return account_id
-	}
+	return { api, acc }
+}
+
+// now store all key + account id in object { api, acc }
+
+const parse_uid_str = str => str.match(/(?<api>\w+):(?<acc>\w+)/).groups
 
 const nessie_upload_bytes =
-	key => data =>
+	key => async data =>
 {
-	// I wonder if store_file should take care of this actually
-	const account_id = await generate_account_id(key)
+	const uid = await generate_uid(key)
 
-	await store_file(key)(account_id)(data)
+	await upload_bytes_chunked(uid)(data)
 
-	return `${key}:${account_id}`
+	return `${uid.api}:${uid.acc}`
 }
 
-const nessie_download_bytes =
-	uri =>
-{
-	const [, key, account_id] = uri.match(/(\w+):(\w+)/)
-
-	return get_file(key)(account_id)
-}
+const nessie_download_bytes = uri_string => download_chunked_bytes(parse_uid_str(uri_string))
 
 export { nessie_upload_bytes, nessie_download_bytes }
