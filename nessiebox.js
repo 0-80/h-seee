@@ -37,7 +37,7 @@ const bytes_to_ascii = bytes => String.fromCharCode(...bytes)
 // transform 'ascii' string into bytes; basically base-256 decode (see note above)
 const ascii_to_bytes = str => new Uint8Array(str.length).map((_, i) => str.charCodeAt(i))
 
-// store bytes in account as a deposite with amount=index
+// store bytes in account as a deposit with amount=index
 const upload_bytes = uid => index => bytes =>
 	create_deposit(uid)({ amount: index, medium: 'balance', description: bytes_to_ascii(bytes) })
 
