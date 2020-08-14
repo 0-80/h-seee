@@ -1,5 +1,3 @@
-#!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
-
 // note: a `uid` object is { api, acc }, i.e. { api key, account id }
 
 /********************************/
