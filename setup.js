@@ -1,14 +1,9 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
-/// setup.js: stores nessie.js in nessie
-
-const NESSIE_KEY = Deno.env.get('NESSIE_KEY')
-
-if (!NESSIE_KEY) throw 'no nessie key! ):'
 
 const BASE_URL = 'http://api.reimaginebanking.com'
 
-const post_json = relative_url => method => json =>
-	fetch(`${BASE_URL}${relative_url}?key=${NESSIE_KEY}`, {
+const post_json = relative_url => method => json => api_key =>
+	fetch(`${BASE_URL}${relative_url}?key=${api_key}`, {
 		method: method.toUpperCase(), // lol
 		headers: { 'content-type': 'application/json; charset=utf-8' },
 		body: JSON.stringify(json)
@@ -31,12 +26,12 @@ const store_chunk = account_id => index => bytes =>
 	create_deposit(account_id)({ amount: index, medium: 'balance', description: bytes_to_ascii(bytes) })
 
 const store_file =
-	account_id => async bytes =>
-		Promise.all(group(1024)(bytes).map((group, i) => store_chunk(account_id)(i + 1)(group)))
+	api_key => account_id => async bytes =>
+		Promise.all(group(1024)(bytes).map((group, i) => store_chunk(account_id)(i + 1)(group)(api_key)))
 
 const get_file =
-	async account_id => {
-		const deposits = await get_deposits(account_id)()
+	api_key => async account_id => {
+		const deposits = await get_deposits(account_id)()(api_key)
 		deposits.sort((a, b) => a.amount - b.amount)
 		return new Uint8Array(deposits.map(({ description }) => Array.from(ascii_to_bytes(description))).flat())
 	}
@@ -44,25 +39,26 @@ const get_file =
 const _ = 'AA'
 const dummy_customer = { first_name: _, last_name: _, address: { street_number: _, street_name: _, city: _, state: _, zip: '00000' }}
 const dummy_account  = { type: 'Credit Card', balance: 0, rewards: 0, nickname: _ }
+const generate_account_id =
+	async api_key => {
+		const customer_id = await create_customer(dummy_customer)(api_key).then(id)
+		const account_id  = await create_account(customer_id)(dummy_account)(api_key).then(id)
+
+		return account_id
+	}
+
+
+const key = '213c0b2c737e19611ba9c9ae094892d8'
 
 /*
-const customer_id = await create_customer(dummy_customer).then(id)
-const account_id  = await create_account(customer_id)(dummy_account).then(id)
+const account_id = await generate_account_id(key)
 
 const data = await Deno.readFile('pig.png')
-
-const resp = await store_file(account_id)(data)
+const resp = await store_file(key)(account_id)(data)
 
 console.log(resp.map(r => r.objectCreated.description.length))
-
 console.log(`stored file at ${account_id}`)
 */
 
-//const data = await Deno.readFile('pig.png')
-//console.log(data)
-//console.log(group(1024)(data))
-//console.log(data)
-//const got_data = await get_file('5f35f0e9f1bac107157e109a')
-
-//await Deno.writeFile('pig2.png', got_data)
-//console.log('done')
+const got_data = await get_file(key)('5f35fb77f1bac107157e10a5')
+console.log(got_data)
