@@ -10,13 +10,9 @@ usage
 ------
 `./nessiebox.js` exports two functions:
 - `nessie_upload_bytes`: uploads a Uint8Array into nessie
-	- ```
-	  nessie api key => Uint8Array => a 'uid' string (used by `nessie_download_bytes`)
-	  ```
+	- *nessie api key* => *Uint8Array* => *a 'uid' string (used by `nessie_download_bytes`)*
 - `nessie_download_bytes`: downloads a Uint8Array from nessie
-	- ```
-	  a 'uid' string (produced by `nessie_upload_bytes`) => Uint8Array
-	  ```
+	- *a 'uid' string (produced by `nessie_upload_bytes`)* => *Uint8Array*
 
 for a demo/example that uses Deno to save/write from local filesystem, see [`./demo.js`](./demo.js) (it should download a picture of a pig and a picture of a graph -- hopefully nobody has tampered with the data yet !!)
 
