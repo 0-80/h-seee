@@ -16,6 +16,12 @@ usage
 
 for a demo/example that uses Deno to save/write from local filesystem, see [./demo.js](./demo.js)
 
+notes
+------
+- all nessie API keys are read+write so anyone that can download a file can also change the file (on nessie)
+- nessiebox is written only with ES6 WebAPIs so you can HTML inline it or run w/ Deno
+	- [./download.html](./download.html) is an inlined example but only works when served over HTTP because it directly accesses nessie (nessie doesn't enforce CORS), which is only served over HTTP.
+
 background
 -----------
 I asked people I knew for ideas and received this cool idea of like a 'visual piggy bank' where it would display your bank account and a little pig avatar whose condition would represent the state of your bank account
@@ -27,3 +33,9 @@ I was going to do that but then spent half a day trying to figure out how to pro
 and that defeat kind of killed my motivation for the cute piggy bank idea... so I took a break and did some more thinking.
 
 during my break I remembered that capital one gave us a 'nessie' API that simulated bank transactions
+
+apology
+--------
+I feel like I should apologize for making this because it's kind of just a big abuse of an API meant for 'reinventing banking for good'
+
+I am sorry
