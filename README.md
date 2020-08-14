@@ -16,6 +16,14 @@ usage
 
 for a demo/example that uses Deno to save/write from local filesystem, see [`./demo.js`](./demo.js) (it should download a picture of a pig and a picture of a graph -- hopefully nobody has tampered with the data yet !!)
 
+demo
+-----
+I can't host download.html through GitHub pages because I use the default domain which is locked to HTTPS, and nessie only serves over HTTP
+
+so I hosted it [here](http://cs.virginia.edu/~jh7qbe/h-seee/download.html) on my school's web hosting service if you want to play with it there :)
+
+you can download `213c0b2c737e19611ba9c9ae094892d8:5f35fe20f1bac107157e10aa:image/png`, an MS paint pig picture, assuming nobody has tampered with the data yet
+
 notes
 ------
 - all nessie API keys are read+write so anyone that can download a file can also change the file (on nessie)
