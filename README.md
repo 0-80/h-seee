@@ -34,6 +34,14 @@ and that defeat kind of killed my motivation for the cute piggy bank idea... so 
 
 during my break I remembered that capital one gave us a 'nessie' API that simulated bank transactions
 
+and I thought 'what if instead of transactions you store music notes?'
+
+and then it was something like 'what if you store music notes' => 'what if you store partial music files and then you can stream them' => 'what about just storing files'
+
+I was hesitant to do a project like this because it's kinda sus and I doubt anyone ever wanted people to store arbitrary data in their API not meant for storing arbitrary data
+
+but it sounded like a fun challenge and I was short on time so I just went and did it
+
 apology
 --------
 I feel like I should apologize for making this because it's kind of just a big abuse of an API meant for 'reinventing banking for good'
