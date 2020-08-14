@@ -16,11 +16,11 @@ usage
 
 for a demo/example that uses Deno to save/write from local filesystem, see [`./demo.js`](./demo.js) (it should download a picture of a pig and a picture of a graph -- hopefully nobody has tampered with the data yet !!)
 
-demo
------
-I can't host download.html through GitHub pages because I use the default domain which is locked to HTTPS, and nessie only serves over HTTP
+online demo
+-----------
+download.html has to be served over HTTP because it directly actually calls `fetch` from within your browser (works because nessie doesn't enforce CORS), and (modern) browsers refuse to make HTTP requests from an HTTPS page
 
-so I hosted it [here](http://cs.virginia.edu/~jh7qbe/h-seee/download.html) on my school's web hosting service if you want to play with it there :)
+so I hosted it [[here](http://cs.virginia.edu/~jh7qbe/h-seee/download.html)] over HTTP on my school's web-hosting service if you want to play with it there :)
 
 you can download `213c0b2c737e19611ba9c9ae094892d8:5f35fe20f1bac107157e10aa:image/png`, an MS paint pig picture, assuming nobody has tampered with the data yet
 
