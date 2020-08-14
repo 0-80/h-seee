@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-net --allow-read --allow-write
 
-import { nessie_upload_bytes, nessie_download_bytes } from './setup.js'
+import { nessie_upload_bytes, nessie_download_bytes } from './nessiebox.js'
 
 const upload = path => api =>
 	Deno.readFile(path).then(nessie_upload_bytes(api))
