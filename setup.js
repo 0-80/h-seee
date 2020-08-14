@@ -1,17 +1,20 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
 
+// note: a `uid` object is { api, acc }, i.e. { api key, account id }
+
 /********************************/
 /** interfaces wrapping nessie **/
 /********************************/
 
 const BASE_URL = 'http://api.reimaginebanking.com'
 
-const post_json = relative_url => method => api => json =>
-	fetch(`${BASE_URL}${relative_url}?key=${api}`, {
-		method: method.toUpperCase(), // lol
-		headers: { 'content-type': 'application/json; charset=utf-8' },
-		body: JSON.stringify(json)
-	}).then(r => r.json()).finally(console.log(api))
+const post_json =
+	relative_url => method => api => json =>
+		fetch(`${BASE_URL}${relative_url}?key=${api}`, {
+			method: method.toUpperCase(), // lol
+			headers: { 'content-type': 'application/json; charset=utf-8' },
+			body: JSON.stringify(json)
+		}).then(r => r.json()).finally(console.log(api))
 
 const create_customer = post_json('/customers')('post')
 const create_account  = customer_id => post_json(`/customers/${customer_id}/accounts`)('post')
@@ -47,11 +50,17 @@ const upload_bytes_chunked =
 
 // download an account's deposits as chunks (sorted by amount) and return them all smushed together
 const download_chunked_bytes =
-	async uid => {
-		const deposits = await get_deposits(uid)()
-		deposits.sort((a, b) => a.amount - b.amount)
-		return new Uint8Array(deposits.map(({ description }) => Array.from(ascii_to_bytes(description))).flat())
-	}
+	async uid =>
+{
+	const deposits = await get_deposits(uid)()
+	deposits.sort((a, b) => a.amount - b.amount)
+
+	return new Uint8Array(deposits.map(({ description }) => Array.from(ascii_to_bytes(description))).flat())
+}
+
+/******************************************/
+/** glue everything together in api form **/
+/******************************************/
 
 // generate_id: given api key, generates new/empty account and returns its {uid}
 const _ = 'AA'
@@ -67,10 +76,10 @@ const generate_uid =
 	return { api, acc }
 }
 
-// now store all key + account id in object { api, acc }
-
+// 'api:acc' => { api, acc }
 const parse_uid_str = str => str.match(/(?<api>\w+):(?<acc>\w+)/).groups
 
+// api key => bytes => uid string
 const nessie_upload_bytes =
 	key => async data =>
 {
@@ -81,6 +90,7 @@ const nessie_upload_bytes =
 	return `${uid.api}:${uid.acc}`
 }
 
-const nessie_download_bytes = uri_string => download_chunked_bytes(parse_uid_str(uri_string))
+// uid string => bytes
+const nessie_download_bytes = uid_string => download_chunked_bytes(parse_uid_str(uid_string))
 
 export { nessie_upload_bytes, nessie_download_bytes }
