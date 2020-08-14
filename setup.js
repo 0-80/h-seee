@@ -47,18 +47,27 @@ const generate_account_id =
 		return account_id
 	}
 
+async function nessie_save_file(key, data)
+{
+	// I wonder if store_file should take care of this actually
+	const account_id = await generate_account_id(key)
+
+	await store_file(key)(account_id)(data)
+
+	return `${key}:${account_id}`
+}
+
+function nessie_get_file(uri)
+{
+	const [, key, account_id] = uri.match(/(\w+):(\w+)/)
+
+	return get_file(key)(account_id)
+}
 
 const key = '213c0b2c737e19611ba9c9ae094892d8'
 
-/*
-const account_id = await generate_account_id(key)
+const uid = await nessie_save_file(key, await Deno.readFile('pig.png'))
 
-const data = await Deno.readFile('pig.png')
-const resp = await store_file(key)(account_id)(data)
+console.log(await nessie_get_file(uid))
 
-console.log(resp.map(r => r.objectCreated.description.length))
-console.log(`stored file at ${account_id}`)
-*/
-
-const got_data = await get_file(key)('5f35fb77f1bac107157e10a5')
-console.log(got_data)
+console.log(uid)
