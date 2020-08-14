@@ -9,18 +9,22 @@ store arbitrary data in nessie, capital one's hackathon API
 usage
 ------
 `./nessiebox.js` exports two functions:
-- `nessie_upload_bytes`: nessie api key => Uint8Array => a 'uid' string that can be used by `nessie_download_bytes`
-	- uploads the Uint8Array into nessie
-- `nessie_download_bytes`: 'uid' string (produced by `nessie_upload_bytes`) => Uint8Array
-	- fetches Uint8Array from nessie with the given 'uid' string
+- `nessie_upload_bytes`: uploads a Uint8Array into nessie
+	- ```
+	  nessie api key => Uint8Array => a 'uid' string (used by `nessie_download_bytes`)
+	  ```
+- `nessie_download_bytes`: downloads a Uint8Array from nessie
+	- ```
+	  a 'uid' string (produced by `nessie_upload_bytes`) => Uint8Array
+	  ```
 
-for a demo/example that uses Deno to save/write from local filesystem, see [./demo.js](./demo.js)
+for a demo/example that uses Deno to save/write from local filesystem, see [`./demo.js`](./demo.js) (it should download a picture of a pig and a picture of a graph -- hopefully nobody has tampered with the data yet !!)
 
 notes
 ------
 - all nessie API keys are read+write so anyone that can download a file can also change the file (on nessie)
 - nessiebox is written only with ES6 WebAPIs so you can HTML inline it or run w/ Deno
-	- [./download.html](./download.html) is an inlined example but only works when served over HTTP because it directly accesses nessie (nessie doesn't enforce CORS), which is only served over HTTP.
+	- [`./download.html`](./download.html) is an inlined example but only works when served over HTTP because it directly accesses nessie (nessie doesn't enforce CORS), which is only served over HTTP.
 
 background
 -----------
