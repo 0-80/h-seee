@@ -1,17 +1,36 @@
+<h1>nessiebox</h1>
+<input id='input' type='text' placeholder='enter nessie URI' />
+<button id='submit'>GET</button>
+<div id='downloads'><h2>downloads:</h2></div>
+
+<style>
+html { font-size: 2em; margin: 5em }
+body, #downloads { display: flex; flex-direction: column; align-items: center }
+#input { width: 52em }
+</style>
+
 <script type='module'>
 import { nessie_download_bytes } from './setup.js'
 
-;(async () => {
+const INPUT     = document.querySelector('#input')
+const SUBMIT    = document.querySelector('#submit')
+const DOWNLOADS = document.querySelector('#downloads')
 
-const data = await nessie_download_bytes('213c0b2c737e19611ba9c9ae094892d8:5f35fe20f1bac107157e10aa')
+const download =
+	async nessie_uri =>
+{
+	const { uri, mime } = nessie_uri.match(/(?<uri>\w+:\w+):(?<mime>.+)/).groups
 
-const blob = new Blob([data], { type: 'image/png' })
+	const data = await nessie_download_bytes(uri)
+	const blob = new Blob([data], { type: mime })
+	const url  = URL.createObjectURL(blob)
 
-console.log(blob)
+	const a = document.createElement('a')
+	a.innerText = nessie_uri
+	a.href = url
 
-const objectURL = URL.createObjectURL(blob)
+	DOWNLOADS.appendChild(a)
+}
 
-document.querySelector('body').innerHTML = `<a href='${objectURL}'>download</a>`
-
-})();
+SUBMIT.addEventListener('click', e => download(INPUT.value.trim()))
 </script>
