@@ -1,5 +1,8 @@
 # development log
 
+## 22:17
+successfully uploaded and downloaded pig.png
+
 ## 18:48
 i thought of a fun idea... storing arbitrary data in the API thing they gave us???
 
