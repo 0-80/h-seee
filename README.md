@@ -6,6 +6,10 @@ description
 ------------
 store arbitrary data in nessie, capital one's hackathon API
 
+notice (6 dec 2020)
+-------------------
+I think they took down nessie; requests return some random HTML, and CORS is is enforced.
+
 usage
 ------
 `./nessiebox.js` exports two functions:
